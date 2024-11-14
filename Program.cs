@@ -1,10 +1,18 @@
+using Microsoft.EntityFrameworkCore;
 using YohualkisTejada_AP1_P2.Components;
+using YohualkisTejada_AP1_P2.DAL;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+// Getting Connection String
+var SqlConStr = builder.Configuration.GetConnectionString("SqlConStr");
+
+// Injecting Connection String
+builder.Services.AddDbContextFactory<Context>(o => o.UseSqlServer(SqlConStr));
 
 var app = builder.Build();
 
