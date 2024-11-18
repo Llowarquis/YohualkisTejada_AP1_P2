@@ -7,5 +7,11 @@ public class Context : DbContext
 {
     public Context(DbContextOptions<Context> options) : base(options) { }
 
-    public DbSet<Modelos> MyProperty { get; set; }
+    public DbSet<Modelos> Modelos { get; set; }
+    public DbSet<ModelosDetalles> ModelosDetalles { get; set; }
+
+	protected override void OnModelCreating(ModelBuilder modelBuilder)
+	{
+		base.OnModelCreating(modelBuilder);
+	}
 }
