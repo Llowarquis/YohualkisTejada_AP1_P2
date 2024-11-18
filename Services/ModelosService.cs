@@ -1,50 +1,60 @@
-﻿namespace YohualkisTejada_AP1_P2.Services;
+﻿using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
+using YohualkisTejada_AP1_P2.DAL;
+using YohualkisTejada_AP1_P2.Models;
 
-public class ModelosService
+namespace YohualkisTejada_AP1_P2.Services;
+
+public class ModelosService(IDbContextFactory<Context> DbFactory)
 {
-    // Guardar
-    public async Task Guardar() 
-    { 
-        
-    }
-
-	// Insertar
-	public async Task Insertar()
+	public async Task<bool> Guardar(Modelos modelo)
 	{
-
+		if (!await Existe(modelo.ModeloId))
+			return await Insertar(modelo);
+		else
+			return await Modificar(modelo);
 	}
 
-	// Modificar
-	public async Task Modificar()
+	private async Task<bool> Existe(int id)
 	{
-
+		await using var _contexto = await DbFactory.CreateDbContextAsync();
+		return false;
 	}
 
-	// Existe
-	public async Task Existe()
+	private async Task<bool> Insertar(Modelos modelo)
 	{
-
+		await using var _contexto = await DbFactory.CreateDbContextAsync();
+		return false;
 	}
 
-	// Eliminar
-	public async Task Eliminar()
+	private async Task<bool> Modificar(Modelos modelo)
 	{
-
+		await using var _contexto = await DbFactory.CreateDbContextAsync();
+		return false;
 	}
 
-
-	// Buscar
-	public async Task Buscar()
+	public async Task<bool> Eliminar(int id)
 	{
-
+		await using var _contexto = await DbFactory.CreateDbContextAsync();
+	
+		return false;
 	}
 
-
-	// Listar
-	public async Task Listar()
+	public async Task<Modelos?> Buscar(int id)
 	{
-
+		await using var _contexto = await DbFactory.CreateDbContextAsync();
+		return null;
 	}
 
+	public async Task<List<Modelos>> Listar(Expression<Func<Modelos, bool>> criterio)
+	{
+		await using var _contexto = await DbFactory.CreateDbContextAsync();
+		return null;
+	}
 
+	private async Task AfectarArticulo(ModelosDetalles[] detalle, bool resta = true)
+	{
+		await using var _contexto = await DbFactory.CreateDbContextAsync();
+
+	}
 }
