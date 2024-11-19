@@ -1,5 +1,56 @@
-﻿<h3>Delete</h3>
+﻿@page "/Delete/{ComboID:int}"
+
+@inject ToastService Toast
+@inject NavigationManager navigationManager
+@inject CombosService combosService
+@rendermode InteractiveServer
+
+<Toasts class="p-3" AutoHide="true" Delay="4000" Placement="ToastsPlacement.TopRight" />
+<PageTitle>Delete</PageTitle>
+<div class="container">
+	<div class="card shadow-lg">
+		<div class="card-header text-center">
+			<h5><strong>Eliminar Combo</strong></h5>
+		</div>
+		<div class="card-body">
+			<h5><strong>¿Est&aacute; seguro que desea eliminar este combo?</strong></h5>
+			<ul>
+				<li><strong>Nombre:</strong> @Combo.Descripcion</li>
+				<li><strong>Sueldo:</strong> @Combo.Precio</li>
+				<li><strong>Fecha:</strong> @Combo.Fecha.ToShortDateString()</li>
+				@if (Combo.EstaVendido)
+				{
+					<li><strong>Estado:</strong> Vendido</li>
+				}
+				else
+				{
+					<li><strong>Estado:</strong> En stock</li>
+				}
+			</ul>
+		</div>
+		<div class="card-footer text-center">
+			<a href="/Index" class="btn btn-primary bi bi-chevron-double-left">Volver</a>
+			<button type="button" class="btn btn-danger bi bi-trash3" @onclick="Eliminar">Eliminar</button>
+		</div>
+	</div>
+</div>
 
 @code {
+	[Parameter]
+	public int ComboID { get; set; }
+	public Combos Combo { get; set; } = new();
 
+	protected override async Task OnInitializedAsync()
+	{
+		Combo = await combosService.Buscar(ComboID);
+	}
+
+	public async Task Eliminar()
+	{
+		Toast.Notify(new(ToastType.Success, $"El combo se ha eliminado correctamente!"));
+		await combosService.Eliminar(ComboID);
+		await Task.Delay(75);
+		navigationManager.NavigateTo("/Index");
+	}
 }
+

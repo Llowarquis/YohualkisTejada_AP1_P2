@@ -1,6 +1,8 @@
+using BlazorBootstrap;
 using Microsoft.EntityFrameworkCore;
 using YohualkisTejada_AP1_P2.Components;
 using YohualkisTejada_AP1_P2.DAL;
+using YohualkisTejada_AP1_P2.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +15,11 @@ var SqlConStr = builder.Configuration.GetConnectionString("SqlConStr");
 
 // Injecting Connection String
 builder.Services.AddDbContextFactory<Context>(o => o.UseSqlServer(SqlConStr));
+
+// Injecting Services
+builder.Services.AddSingleton<ToastService>();
+builder.Services.AddScoped<CombosService>();
+builder.Services.AddScoped<ArticulosPCService>();
 
 var app = builder.Build();
 

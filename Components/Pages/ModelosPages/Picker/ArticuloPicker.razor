@@ -1,0 +1,85 @@
+﻿@inject ToastService Toast
+
+<Toasts class="p-3" AutoHide="true" Delay="4000" Placement="ToastsPlacement.TopRight" />
+<div class="input-group ">
+	@*Campo Articulos*@
+	<InputSelect class="form-select" @bind-Value="ArticuloId">
+		<option value="0" disabled selected>--- Selecciona un articulo ---</option>
+		@foreach (var articulo in ListaArticulos)
+		{
+			<option value="@articulo.ArticuloId">@articulo.Descripcion -- Stock: @articulo.Existencia</option>
+		}
+	</InputSelect>
+	<ValidationMessage For="@(() => Detalle.ArticuloId)"></ValidationMessage>
+
+
+	@*Campo Cantidad*@
+	<label class="col-form-label input-group-text">Cantidad:</label>
+	<InputNumber class="form-control" placeholder="Cantidad" @bind-Value="Cantidad"></InputNumber>
+	<ValidationMessage For="@(() => Detalle.Cantidad)"></ValidationMessage>
+
+
+	@*Campo Precio*@
+	<label class="col-form-label input-group-text">Precio:</label>
+	<InputNumber class="form-control" placeholder="Precio" @bind-Value="Precio" readonly>@Precio</InputNumber>
+	<ValidationMessage For="@(() => Detalle.Precio)"></ValidationMessage>
+
+
+	@*BTN Agregar*@
+	<button type="button" class="btn btn-outline-success" @onclick="SeleccionArticulo">
+		<i class="bi bi-plus"></i>Agregar
+	</button>
+
+</div>
+
+@code {
+	[Parameter]
+	public List<ArticulosPC> ListaArticulos { get; set; } = [];
+
+	[Parameter]
+	[EditorRequired]
+	public int ArticuloId { get; set; }
+
+	[Parameter]
+	[EditorRequired]
+	public int Cantidad { get; set; }
+
+	[Parameter]
+	[EditorRequired]
+	public double? Precio { get; set; }
+
+	[Parameter]
+	[EditorRequired]
+	public EventCallback<(ArticulosPC Articulo, int Cantidad)> ArticuloSeleccionado { get; set; }
+
+	[Parameter]
+	[EditorRequired]
+	public CombosDetalles Detalle { get; set; } = new();
+
+	private async Task SeleccionArticulo()
+	{
+		if (ArticuloId > 0 && Cantidad > 0)
+		{
+			var articulosModelos = ListaArticulos.SingleOrDefault(p => p.ArticuloId == ArticuloId);
+			if (articulosModelos == null)
+			{
+				Toast.Notify(new(ToastType.Danger, "Artículo no encontrado."));
+				return;
+			}
+
+			if (articulosModelos.Existencia < Cantidad)
+			{
+				Toast.Notify(new(ToastType.Warning, "La cantidad deseada no está en stock."));
+				return;
+			}
+
+			Precio = articulosModelos.Precio;
+			await ArticuloSeleccionado.InvokeAsync((articulosModelos, Cantidad));
+		}
+		else
+		{
+			Toast.Notify(new(ToastType.Warning, "La cantidad debe ser mayor que 0 y debe seleccionar un artículo."));
+		}
+	}
+
+}

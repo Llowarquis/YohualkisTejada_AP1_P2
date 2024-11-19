@@ -1,5 +1,173 @@
-﻿<h3>Edit</h3>
+﻿@page "/Edit/{ComboID:int}"
+
+@inject ToastService Toast
+@inject ArticulosPCService articulosService
+@inject NavigationManager navigationManager
+@inject CombosService combosService
+@rendermode InteractiveServer
+
+<PageTitle>Edit</PageTitle>
+<Toasts class="p-3" AutoHide="true" Delay="4000" Placement="ToastsPlacement.TopRight" />
+<EditForm Model=@Combo OnValidSubmit="Guardar">
+	<DataAnnotationsValidator />
+
+	<div class="container">
+		<div class="card shadow-lg">
+			@*HEADER*@
+			<div class="card-header text-center">
+				<h5><strong>Editar Combo</strong></h5>
+			</div>
+
+			@*BODY*@
+			<div class="card-body">
+				<div>
+					@*Campo ID*@
+					<label class="form-label"><strong>ID:</strong></label>
+					<InputNumber class="form-control" @bind-Value="Combo.ComboId" readonly></InputNumber>
+				</div>
+				<br />
+				<div>
+					@*Campo Descripcion*@
+					<label class="form-label"><strong>Descripci&oacute;n:</strong></label>
+					<InputText placeholder="Descripcion" class="form-control" @bind-Value="Combo.Descripcion"></InputText>
+					<ValidationMessage For="@(() => Combo.Descripcion)" />
+				</div>
+				<br />
+				<div>
+					@*Campo precio*@
+					<label class="form-label"><strong>Precio:</strong></label>
+					<InputNumber class="form-control" placeholder="RD$0.00" @bind-Value="Combo.Precio"></InputNumber>
+					<ValidationMessage For="@(() => Combo.Precio)" />
+				</div>
+				<br />
+				<div>
+					@*Campo Fecha*@
+					<label class="form-label"><strong>Fecha:</strong></label>
+					<InputDate class="form-control" @bind-Value="Combo.Fecha"></InputDate>
+					<ValidationMessage For="@(() => Combo.Fecha)" />
+				</div>
+
+				<div class="border border-success p-3 mt-3">
+					<div>
+						<h5>Detalles de articulos utilizados</h5>
+					</div>
+
+					@*AQUI SE LLAMA EL COMPONENTE NUEVO*@
+					<ArticuloPicker ArticuloId="@Detalle.ArticuloId"
+									Cantidad="@Detalle.Cantidad"
+									Precio="@Detalle.Precio"
+									ArticuloSeleccionado="Agregar"
+									ListaArticulos="@ListaArticulos"
+									Detalle="Detalle" />
+					<br />
+					@*Index de los Detalles*@
+					<table class="table table-sm table-hover text-center">
+						<thead>
+							<tr>
+								<th>Articulo</th>
+								<th>Cantidad</th>
+								<th>Precio</th>
+								<th>Remover</th>
+							</tr>
+						</thead>
+						<tbody>
+							@foreach (var detalle in Combo.Detalles)
+							{
+								var articulo = ListaArticulos.SingleOrDefault(a => a.ArticuloId == detalle.ArticuloId);
+								<tr>
+									<th>@articulo?.Descripcion</th>
+									<th>@detalle.Cantidad</th>
+									<th>@(detalle.Precio * detalle.Cantidad)</th>
+									<th>
+										<button class="btn btn-outline-danger bi bi-trash3" type="button"
+												@onclick="(() => RemoverDetalle(detalle))">
+										</button>
+									</th>
+								</tr>
+							}
+						</tbody>
+						<tfoot>
+						</tfoot>
+					</table>
+				</div>
+			</div>
+
+			@*FOOTER*@
+			<div class="card-footer text-center">
+				<a href="/Index" class="btn btn-primary bi bi-chevron-double-left">Volver</a>
+				<button type="submit" class="btn btn-success bi bi-floppy">    Guardar</button>
+			</div>
+		</div>
+	</div>
+</EditForm>
+
 
 @code {
-	
+	[Parameter]
+	public int ComboID { get; set; }
+	public List<ArticulosPC> ListaArticulos { get; set; } = [];
+	public Combos Combo { get; set; } = new();
+	public CombosDetalles Detalle { get; set; } = new();
+
+	protected override async Task OnInitializedAsync()
+	{
+		Combo = await combosService.Buscar(ComboID);
+		ListaArticulos = await articulosService.Listar(la => true);
+	}
+
+	public async Task Guardar()
+	{
+		if (await Validar())
+		{
+			Toast.Notify(new(ToastType.Danger, $"No pueden haber 2 combos con la misma descripción"));
+			return;
+		}
+		if (Combo.Detalles.Count < 1)
+		{
+			Toast.Notify(new(ToastType.Danger, $"El detalle debe llevar minimo 1 articulo"));
+			return;
+		}
+		Toast.Notify(new(ToastType.Success, $"El combo se modificado correctamente!"));
+		await combosService.Guardar(Combo);
+		await Task.Delay(75);
+		navigationManager.NavigateTo("/Index");
+	}
+
+	public async Task Agregar((ArticulosPC articulo, int cantidad) selection)
+	{
+		var ArticuloExiste = Combo.Detalles
+							.FirstOrDefault(a => a.ArticuloId == selection.articulo.ArticuloId);
+
+		if (ArticuloExiste != null)
+		{
+			ArticuloExiste.Cantidad += selection.cantidad;
+			ArticuloExiste.Precio = selection.articulo.Precio * selection.cantidad;
+		}
+		else
+		{
+			var detalle = new CombosDetalles
+				{
+					ArticuloId = selection.articulo.ArticuloId,
+					Cantidad = selection.cantidad,
+					Precio = selection.articulo.Precio * selection.cantidad,
+				};
+			Combo.Detalles.Add(detalle);
+			detalle = new CombosDetalles();
+			await Task.CompletedTask;
+		}
+	}
+
+	public void RemoverDetalle(CombosDetalles detalle)
+	{
+		Combo.Detalles.Remove(detalle);
+		Detalle.ArticuloId = detalle.ArticuloId;
+		Detalle.Cantidad = detalle.Cantidad;
+		Detalle.Precio = detalle.Precio;
+	}
+
+	private async Task<bool> Validar()
+	{
+		return await combosService.ExisteNombre(Combo.ComboId, Combo?.Descripcion);
+	}
 }
+

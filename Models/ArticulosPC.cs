@@ -2,7 +2,7 @@
 
 namespace YohualkisTejada_AP1_P2.Models;
 
-public class ArticulosModelos // El nombre de esta clase esta sujeta a cambios en el 2do parcial -> 18/11/2024
+public class ArticulosPC // El nombre de esta clase esta sujeta a cambios en el 2do parcial -> 18/11/2024
 {
     [Key]
     public int ArticuloId { get; set; }
